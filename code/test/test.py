@@ -49,11 +49,29 @@ lines = cv2.HoughLinesP(
     maxLineGap=HOUGH_MAX_LINE_GAP,
 )
 
-for line in lines:
+angles = np.zeros(lines.shape[0:2])  # TODO: Very ugly to change
+for i, line in enumerate(lines):
     x1, y1, x2, y2 = line[0]
     cv2.line(img_rgb, (x1, y1), (x2, y2), (255, 0, 0), 3)
+    angle = np.abs(np.arctan2(y2 - y1, x2 - x1))
+    angles[i] = angle
+
+angles = np.float32(angles)
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+ret, labels, centers = cv2.kmeans(
+    angles, 2, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS
+)
 
 cv2.imshow("canny", img_rgb)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+for i, line in enumerate(lines):
+    color = [(255, 0, 0), (0, 255, 0)]
+    x1, y1, x2, y2 = line[0]
+    cv2.line(img_rgb, (x1, y1), (x2, y2), color[labels[i, 0]], 3)
+
+cv2.imshow("Clustering of the line", img_rgb)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
